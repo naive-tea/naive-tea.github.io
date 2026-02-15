@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Stream Deck+ Layout Designer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #0a0b10;
+            --panel: rgba(255, 255, 255, 0.04);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --accent: #7c3aed;
+            --accent-light: #a78bfa;
+            --accent-glow: rgba(124, 58, 237, 0.25);
+            --text: #e2e8f0;
+            --text-dim: #64748b;
+            --text-muted: #475569;
+            --input-bg: #12131a;
+            --input-border: #1e2030;
+            --input-focus: #7c3aed;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --gold: #fbbf24;
+            --canvas-bg: #000000;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column
+        }
+
+        /* ── Toolbar ── */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border-bottom: 1px solid var(--panel-border);
+            flex-shrink: 0;
+        }
+
+        .toolbar-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-light);
+            margin-right: 16px;
+            letter-spacing: -0.3px
+        }
+
+        .toolbar-sep {
+            width: 1px;
+            height: 24px;
+            background: var(--panel-border);
+            margin: 0 4px
+        }
+
+        .btn {
+            padding: 6px 14px;
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            background: var(--panel);
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .15s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15)
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff
+        }
+
+        .btn-accent:hover {
+            background: #6d28d9;
+            border-color: #6d28d9
+        }
+
+        .btn-danger {
+            border-color: rgba(239, 68, 68, 0.3);
+            color: var(--danger)
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.1)
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 11px
+        }
+
+        /* ── Main Layout ── */
+        .main {
+            display: flex;
+            flex: 1;
+            overflow: hidden
+        }
+
+        /* ── Layers Panel ── */
+        .layers-panel {
+            width: 200px;
+            border-right: 1px solid var(--panel-border);
+            background: var(--panel);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .panel-header {
+            padding: 10px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-dim);
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .layer-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px
+        }
+
+        .layer-item {
+            padding: 7px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background .1s;
+            margin: 1px 0;
+        }
+
+        .layer-item:hover {
+            background: rgba(255, 255, 255, 0.05)
+        }
+
+        .layer-item.selected {
+            background: var(--accent-glow);
+            border: 1px solid rgba(124, 58, 237, 0.3)
+        }
+
+        .layer-item .layer-icon {
+            font-size: 14px;
+            opacity: 0.6;
+            width: 18px;
+            text-align: center
+        }
+
+        .layer-item .layer-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .layer-item .layer-delete {
+            opacity: 0;
+            font-size: 10px;
+            color: var(--danger);
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: opacity .1s;
+        }
+
+        .layer-item:hover .layer-delete {
+            opacity: 0.6
+        }
+
+        .layer-item .layer-delete:hover {
+            opacity: 1;
+            background: rgba(239, 68, 68, 0.15)
+        }
+
+        /* ── Canvas Area ── */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.03) 0%, transparent 70%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .canvas-frame {
+            position: relative
+        }
+
+        .canvas-label {
+            position: absolute;
+            top: -22px;
+            left: 0;
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .canvas-label span {
+            color: var(--text-dim)
+        }
+
+        .canvas-outer {
+            width: 600px;
+            height: 300px;
+            position: relative;
+            border: 2px solid rgba(124, 58, 237, 0.3);
+            border-radius: 8px;
+            box-shadow: 0 0 40px var(--accent-glow), inset 0 0 60px rgba(0, 0, 0, 0.5);
+            background: var(--canvas-bg);
+            overflow: hidden;
+        }
+
+        .canvas-grid {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .canvas-element {
+            position: absolute;
+            cursor: move;
+            border: 1px solid transparent;
+            transition: border-color .1s;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .canvas-element:hover {
+            border-color: rgba(255, 255, 255, 0.2)
+        }
+
+        .canvas-element.selected {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .canvas-element .resize-handle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 2px;
+            display: none;
+            z-index: 10;
+        }
+
+        .canvas-element.selected .resize-handle {
+            display: block
+        }
+
+        .resize-handle.tl {
+            top: -4px;
+            left: -4px;
+            cursor: nw-resize
+        }
+
+        .resize-handle.tr {
+            top: -4px;
+            right: -4px;
+            cursor: ne-resize
+        }
+
+        .resize-handle.bl {
+            bottom: -4px;
+            left: -4px;
+            cursor: sw-resize
+        }
+
+        .resize-handle.br {
+            bottom: -4px;
+            right: -4px;
+            cursor: se-resize
+        }
+
+        /* ── Properties Panel ── */
+        .props-panel {
+            width: 260px;
+            border-left: 1px solid var(--panel-border);
+            background: var(--panel);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .props-section {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--panel-border)
+        }
+
+        .props-section-title {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+
+        .prop-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 5px 0
+        }
+
+        .prop-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            width: 55px;
+            flex-shrink: 0;
+            text-align: right
+        }
+
+        .prop-input {
+            flex: 1;
+            padding: 4px 8px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color .15s;
+        }
+
+        .prop-input:focus {
+            border-color: var(--input-focus)
+        }
+
+        .prop-input[type=number] {
+            width: 60px;
+            flex: none
+        }
+
+        .prop-input[type=color] {
+            width: 32px;
+            height: 26px;
+            padding: 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            flex: none;
+        }
+
+        .prop-select {
+            flex: 1;
+            padding: 4px 8px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .prop-row-half {
+            display: flex;
+            gap: 6px
+        }
+
+        .prop-row-half .prop-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: 1
+        }
+
+        .prop-group .prop-mini-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            width: 12px
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            font-size: 12px;
+            gap: 6px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 28px;
+            opacity: 0.3;
+            margin-bottom: 4px
+        }
+
+        /* ── HA Connection Modal ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.open {
+            display: flex
+        }
+
+        .modal {
+            background: #14151f;
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 24px;
+            width: 420px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--accent-light)
+        }
+
+        .modal .prop-row {
+            margin: 8px 0
+        }
+
+        .modal .prop-label {
+            width: 80px
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 20px
+        }
+
+        /* ── Status Bar ── */
+        .statusbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 16px;
+            border-top: 1px solid var(--panel-border);
+            font-size: 11px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--danger);
+            flex-shrink: 0
+        }
+
+        .status-dot.connected {
+            background: var(--success)
+        }
+
+        .statusbar .spacer {
+            flex: 1
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2)
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-title">⚙ Layout Designer</div>
+        <button class="btn" onclick="addElement('clock')" title="Add Clock">🕐 Clock</button>
+        <button class="btn" onclick="addElement('entity')" title="Add HA Entity">📡 Entity</button>
+        <button class="btn" onclick="addElement('text')" title="Add Text Label">✏️ Text</button>
+        <button class="btn" onclick="addElement('icon')" title="Add Icon/Image">🖼️ Icon</button>
+        <div class="toolbar-sep"></div>
+        <button class="btn btn-sm" onclick="toggleGrid()" id="gridBtn">Grid: On</button>
+        <div class="toolbar-sep"></div>
+        <button class="btn btn-sm" onclick="importLayout()">📂 Import</button>
+        <button class="btn btn-sm btn-accent" onclick="exportLayout()">💾 Export JSON</button>
+        <div class="toolbar-sep"></div>
+        <button class="btn btn-sm" onclick="openHAModal()">🔌 HA Connection</button>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+        <!-- Layers -->
+        <div class="layers-panel">
+            <div class="panel-header">Layers</div>
+            <div class="layer-list" id="layerList"></div>
+        </div>
+
+        <!-- Canvas -->
+        <div class="canvas-area">
+            <div class="canvas-frame">
+                <div class="canvas-label">200 × 100 &nbsp;<span>(3× scale)</span></div>
+                <div class="canvas-outer" id="canvas">
+                    <div class="canvas-grid" id="canvasGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Properties -->
+        <div class="props-panel" id="propsPanel">
+            <div class="empty-state" id="emptyProps">
+                <div class="empty-icon">🎨</div>
+                <div>Select an element to<br />edit its properties</div>
+            </div>
+            <div id="propsContent" style="display:none">
+                <!-- Common -->
+                <div class="props-section">
+                    <div class="props-section-title">Element</div>
+                    <div class="prop-row">
+                        <span class="prop-label">Key</span>
+                        <input class="prop-input" id="propKey" placeholder="element-key" />
+                    </div>
+                    <div class="prop-row">
+                        <span class="prop-label">Type</span>
+                        <span id="propType" style="font-size:12px;color:var(--accent-light)"></span>
+                    </div>
+                </div>
+
+                <!-- Position & Size -->
+                <div class="props-section">
+                    <div class="props-section-title">Position & Size</div>
+                    <div class="prop-row-half">
+                        <div class="prop-group">
+                            <span class="prop-mini-label">X</span>
+                            <input class="prop-input" type="number" id="propX" min="0" max="200" step="1" />
+                        </div>
+                        <div class="prop-group">
+                            <span class="prop-mini-label">Y</span>
+                            <input class="prop-input" type="number" id="propY" min="0" max="100" step="1" />
+                        </div>
+                    </div>
+                    <div class="prop-row-half" style="margin-top:6px">
+                        <div class="prop-group">
+                            <span class="prop-mini-label">W</span>
+                            <input class="prop-input" type="number" id="propW" min="1" max="200" step="1" />
+                        </div>
+                        <div class="prop-group">
+                            <span class="prop-mini-label">H</span>
+                            <input class="prop-input" type="number" id="propH" min="1" max="100" step="1" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typography -->
+                <div class="props-section" id="textProps">
+                    <div class="props-section-title">Typography</div>
+                    <div class="prop-row">
+                        <span class="prop-label">Size</span>
+                        <input class="prop-input" type="number" id="propFontSize" min="6" max="72" step="1" />
+                    </div>
+                    <div class="prop-row">
+                        <span class="prop-label">Weight</span>
+                        <select class="prop-select" id="propFontWeight">
+                            <option value="300">Light (300)</option>
+                            <option value="400">Regular (400)</option>
+                            <option value="500">Medium (500)</option>
+                            <option value="600">Semibold (600)</option>
+                            <option value="700">Bold (700)</option>
+                            <option value="800">ExtraBold (800)</option>
+                            <option value="900">Black (900)</option>
+                            <option value="1000">Ultra (1000)</option>
+                        </select>
+                    </div>
+                    <div class="prop-row">
+                        <span class="prop-label">Color</span>
+                        <input class="prop-input" type="color" id="propColor" value="#ffffff" />
+                        <input class="prop-input" id="propColorHex" placeholder="#FFFFFF"
+                            style="width:80px;flex:none" />
+                    </div>
+                    <div class="prop-row">
+                        <span class="prop-label">Align</span>
+                        <select class="prop-select" id="propAlign">
+                            <option value="left">Left</option>
+                            <option value="center">Center</option>
+                            <option value="right">Right</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Clock Properties -->
+                <div class="props-section" id="clockProps" style="display:none">
+                    <div class="props-section-title">Clock</div>
+                    <div class="prop-row">
+                        <span class="prop-label">Format</span>
+                        <select class="prop-select" id="propClockFormat">
+                            <option value="12h">12-hour</option>
+                            <option value="24h">24-hour</option>
+                        </select>
+                    </div>
+                    <div class="prop-row">
+                        <span class="prop-label">Seconds</span>
+                        <select class="prop-select" id="propShowSeconds">
+                            <option value="false">Hide</option>
+                            <option value="true">Show</option>
+                        </select>
+                    </div>
+                    <div class="prop-row">
+                        <span class="prop-label">Content</span>
+                        <select class="prop-select" id="propClockContent">
+                            <option value="time">Time</option>
+                            <option value="day">Day Name</option>
+                            <option value="date">Date</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Entity Properties -->
+                <div class="props-section" id="entityProps" style="display:none">
+                    <div class="props-section-title">Entity</div>
+                    <div class="prop-row">
+                        <span class="prop-label">Entity ID</span>
+                        <input class="prop-input" id="propEntityId" placeholder="sensor.temperature" />
+                    </div>
+                    <div class="prop-row">
+                        <span class="prop-label">Display</span>
+                        <select class="prop-select" id="propEntityDisplay">
+                            <option value="state">State Value</option>
+                            <option value="icon">Icon</option>
+                            <option value="name">Friendly Name</option>
+                            <option value="unit">Unit</option>
+                        </select>
+                    </div>
+                    <div class="prop-row">
+                        <span class="prop-label">Slot</span>
+                        <select class="prop-select" id="propEntityIndex">
+                            <option value="1">Entity 1</option>
+                            <option value="2">Entity 2</option>
+                            <option value="3">Entity 3</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Text Properties -->
+                <div class="props-section" id="textContentProps" style="display:none">
+                    <div class="props-section-title">Text Content</div>
+                    <div class="prop-row">
+                        <span class="prop-label">Text</span>
+                        <input class="prop-input" id="propTextContent" placeholder="Label text" />
+                    </div>
+                </div>
+
+                <!-- Icon Properties -->
+                <div class="props-section" id="iconProps" style="display:none">
+                    <div class="props-section-title">Icon</div>
+                    <div class="prop-row">
+                        <span class="prop-label">MDI Icon</span>
+                        <input class="prop-input" id="propIconName" placeholder="lightbulb" />
+                    </div>
+                    <div class="prop-row">
+                        <span class="prop-label">Color</span>
+                        <input class="prop-input" type="color" id="propIconColor" value="#ffffff" />
+                        <input class="prop-input" id="propIconColorHex" placeholder="#FFFFFF"
+                            style="width:80px;flex:none" />
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="props-section">
+                    <button class="btn btn-danger btn-sm" onclick="deleteSelected()" style="width:100%">🗑 Delete
+                        Element</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="statusbar">
+        <div class="status-dot" id="haDot"></div>
+        <span id="haStatus">HA: Not connected</span>
+        <div class="spacer"></div>
+        <span id="elemCount">Elements: 0</span>
+        <span>|</span>
+        <span id="mousePos">0, 0</span>
+    </div>
+
+    <!-- HA Modal -->
+    <div class="modal-overlay" id="haModal">
+        <div class="modal">
+            <h3>🔌 Home Assistant Connection</h3>
+            <div class="prop-row">
+                <span class="prop-label">HA URL</span>
+                <input class="prop-input" id="haUrl" placeholder="http://192.168.1.100:8123" />
+            </div>
+            <div class="prop-row">
+                <span class="prop-label">Token</span>
+                <input class="prop-input" id="haToken" type="password" placeholder="Long-lived access token" />
+            </div>
+            <div class="prop-row">
+                <span class="prop-label">Refresh</span>
+                <select class="prop-select" id="haRefresh">
+                    <option value="0">Manual only</option>
+                    <option value="5000" selected>5 seconds</option>
+                    <option value="10000">10 seconds</option>
+                    <option value="30000">30 seconds</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeHAModal()">Cancel</button>
+                <button class="btn btn-accent" onclick="connectHA()">Connect & Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import File Input (Hidden) -->
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)" />
+
+    <script>
+        // ── State ──
+        const SCALE = 3;
+        const CANVAS_W = 200, CANVAS_H = 100;
+        let elements = [];
+        let selectedId = null;
+        let nextId = 1;
+        let gridOn = true;
+        let haConnected = false;
+        let haRefreshTimer = null;
+        let haStates = {};
+        let clockTimer = null;
+
+        function normalizeUrl(url) {
+            let u = (url || '').trim().replace(/\/+$/, '');
+            if (u && !/^https?:\/\//i.test(u)) {
+                u = 'http://' + u;
+            }
+            return u;
+        }
+
+        // ── Canvas refs ──
+        const canvas = document.getElementById('canvas');
+
+        // ── Element Management ──
+        function addElement(type) {
+            const id = 'elem-' + (nextId++);
+            const defaults = {
+                clock: { key: 'clock-' + nextId, x: 66, y: 2, w: 132, h: 52, fontSize: 24, fontWeight: 700, color: '#FFFFFF', alignment: 'center', clockFormat: '12h', showSeconds: false, clockContent: 'time' },
+                entity: { key: 'entity-' + nextId, x: 10, y: 30, w: 60, h: 20, fontSize: 14, fontWeight: 400, color: '#FFFFFF', alignment: 'center', entityId: '', entityDisplay: 'state', entityIndex: 1 },
+                text: { key: 'text-' + nextId, x: 10, y: 10, w: 80, h: 20, fontSize: 12, fontWeight: 400, color: '#AAAAAA', alignment: 'center', textContent: 'Label' },
+                icon: { key: 'icon-' + nextId, x: 10, y: 10, w: 30, h: 30, fontSize: 12, fontWeight: 400, color: '#FFFFFF', alignment: 'center', iconName: 'lightbulb', iconColor: '#FFFFFF' },
+            };
+            const elem = { id, type, ...defaults[type] };
+            elements.push(elem);
+            renderCanvas();
+            renderLayers();
+            selectElement(id);
+            updateStatus();
+        }
+
+        function deleteSelected() {
+            if (!selectedId) return;
+            elements = elements.filter(e => e.id !== selectedId);
+            selectedId = null;
+            renderCanvas();
+            renderLayers();
+            showProps();
+            updateStatus();
+        }
+
+        function selectElement(id) {
+            selectedId = id;
+            renderCanvas();
+            renderLayers();
+            showProps();
+        }
+
+        function getSelected() { return elements.find(e => e.id === selectedId); }
+
+        // ── Canvas Rendering ──
+        function renderCanvas() {
+            // Remove old elements (keep grid)
+            canvas.querySelectorAll('.canvas-element').forEach(el => el.remove());
+
+            elements.forEach(elem => {
+                const div = document.createElement('div');
+                div.className = 'canvas-element' + (elem.id === selectedId ? ' selected' : '');
+                div.dataset.id = elem.id;
+                div.style.left = (elem.x * SCALE) + 'px';
+                div.style.top = (elem.y * SCALE) + 'px';
+                div.style.width = (elem.w * SCALE) + 'px';
+                div.style.height = (elem.h * SCALE) + 'px';
+                div.style.fontSize = (elem.fontSize * SCALE) + 'px';
+                div.style.fontWeight = elem.fontWeight;
+                div.style.color = elem.color;
+                div.style.textAlign = elem.alignment;
+                div.style.justifyContent = elem.alignment === 'left' ? 'flex-start' : elem.alignment === 'right' ? 'flex-end' : 'center';
+                div.style.padding = '0 ' + (2 * SCALE) + 'px';
+                div.style.lineHeight = (elem.h * SCALE) + 'px';
+
+                // Content
+                div.textContent = getElementPreview(elem);
+
+                // Icon type renders differently
+                if (elem.type === 'icon') {
+                    div.textContent = '';
+                    div.style.padding = '0';
+                    renderIconElement(div, elem);
+                }
+
+                // Resize handles
+                ['tl', 'tr', 'bl', 'br'].forEach(pos => {
+                    const handle = document.createElement('div');
+                    handle.className = 'resize-handle ' + pos;
+                    handle.dataset.handle = pos;
+                    div.appendChild(handle);
+                });
+
+                // Events
+                div.addEventListener('mousedown', (e) => {
+                    if (e.target.dataset.handle) {
+                        startResize(e, elem, e.target.dataset.handle);
+                    } else {
+                        selectElement(elem.id);
+                        startDrag(e, elem);
+                    }
+                    e.stopPropagation();
+                });
+
+                canvas.appendChild(div);
+            });
+        }
+
+        function getElementPreview(elem) {
+            switch (elem.type) {
+                case 'clock': return getClockPreview(elem);
+                case 'entity': return getEntityPreview(elem);
+                case 'text': return elem.textContent || 'Text';
+                case 'icon': return '🖼️';
+                default: return '?';
+            }
+        }
+
+        function getClockPreview(elem) {
+            const now = new Date();
+            switch (elem.clockContent) {
+                case 'day': return ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][now.getDay()];
+                case 'date': {
+                    const m = now.getMonth() + 1;
+                    const d = now.getDate();
+                    return m + '/' + d;
+                }
+                default: {
+                    let h = elem.clockFormat === '12h' ? (now.getHours() % 12 || 12) : now.getHours();
+                    const m = String(now.getMinutes()).padStart(2, '0');
+                    const s = String(now.getSeconds()).padStart(2, '0');
+                    return elem.showSeconds === 'true' || elem.showSeconds === true ? h + ':' + m + ':' + s : h + ':' + m;
+                }
+            }
+        }
+
+        function getEntityPreview(elem) {
+            if (!elem.entityId) return '—';
+            const state = haStates[elem.entityId];
+            if (!state) return elem.entityId.split('.').pop();
+            switch (elem.entityDisplay) {
+                case 'icon': return state.attributes?.icon || 'mdi:help';
+                case 'name': return state.attributes?.friendly_name || elem.entityId;
+                case 'unit': return state.attributes?.unit_of_measurement || '';
+                default: return state.state || '?';
+            }
+        }
+
+        async function renderIconElement(div, elem) {
+            if (!elem.iconName) { div.textContent = '?'; return; }
+            const name = elem.iconName.replace(/^mdi:/, '');
+            try {
+                const resp = await fetch(`https://cdn.jsdelivr.net/npm/@mdi/svg@latest/svg/${name}.svg`);
+                if (!resp.ok) { div.textContent = '?'; return; }
+                let svg = await resp.text();
+                const c = elem.iconColor || elem.color || '#FFFFFF';
+                svg = svg.replace(/<path/g, `<path fill="${c}"`);
+                svg = svg.replace(/width="[^"]*"/, `width="${elem.w * SCALE}"`);
+                svg = svg.replace(/height="[^"]*"/, `height="${elem.h * SCALE}"`);
+                div.innerHTML = svg;
+            } catch { div.textContent = '?'; }
+        }
+
+        // ── Drag & Resize ──
+        let dragState = null;
+
+        function startDrag(e, elem) {
+            dragState = { mode: 'move', elem, startX: e.clientX, startY: e.clientY, origX: elem.x, origY: elem.y };
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', onDragEnd);
+        }
+
+        function startResize(e, elem, handle) {
+            dragState = { mode: 'resize', elem, handle, startX: e.clientX, startY: e.clientY, origX: elem.x, origY: elem.y, origW: elem.w, origH: elem.h };
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', onDragEnd);
+        }
+
+        function onDrag(e) {
+            if (!dragState) return;
+            const dx = (e.clientX - dragState.startX) / SCALE;
+            const dy = (e.clientY - dragState.startY) / SCALE;
+
+            if (dragState.mode === 'move') {
+                dragState.elem.x = Math.round(Math.max(0, Math.min(CANVAS_W - dragState.elem.w, dragState.origX + dx)));
+                dragState.elem.y = Math.round(Math.max(0, Math.min(CANVAS_H - dragState.elem.h, dragState.origY + dy)));
+            } else if (dragState.mode === 'resize') {
+                const h = dragState.handle;
+                let nx = dragState.origX, ny = dragState.origY, nw = dragState.origW, nh = dragState.origH;
+                if (h.includes('r')) nw = Math.max(10, dragState.origW + dx);
+                if (h.includes('l')) { nx = dragState.origX + dx; nw = Math.max(10, dragState.origW - dx); }
+                if (h.includes('b')) nh = Math.max(8, dragState.origH + dy);
+                if (h.includes('t')) { ny = dragState.origY + dy; nh = Math.max(8, dragState.origH - dy); }
+                dragState.elem.x = Math.round(Math.max(0, nx));
+                dragState.elem.y = Math.round(Math.max(0, ny));
+                dragState.elem.w = Math.round(Math.min(CANVAS_W - dragState.elem.x, nw));
+                dragState.elem.h = Math.round(Math.min(CANVAS_H - dragState.elem.y, nh));
+            }
+            renderCanvas();
+            showProps();
+        }
+
+        function onDragEnd() {
+            dragState = null;
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', onDragEnd);
+        }
+
+        // Click canvas background to deselect
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.target === canvas || e.target.id === 'canvasGrid') {
+                selectedId = null;
+                renderCanvas();
+                renderLayers();
+                showProps();
+            }
+        });
+
+        // Track mouse position
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.round((e.clientX - rect.left) / SCALE);
+            const y = Math.round((e.clientY - rect.top) / SCALE);
+            document.getElementById('mousePos').textContent = x + ', ' + y;
+        });
+
+        // Delete with keyboard
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' && selectedId && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
+                deleteSelected();
+            }
+        });
+
+        // ── Layers ──
+        function renderLayers() {
+            const list = document.getElementById('layerList');
+            list.innerHTML = '';
+            elements.forEach(elem => {
+                const div = document.createElement('div');
+                div.className = 'layer-item' + (elem.id === selectedId ? ' selected' : '');
+                const icons = { clock: '🕐', entity: '📡', text: '✏️', icon: '🖼️' };
+                const name = elem.type === 'text' ? (elem.textContent || 'Text') :
+                    elem.type === 'entity' ? (elem.entityId || 'Entity') :
+                        elem.type === 'icon' ? (elem.iconName || 'Icon') :
+                            elem.clockContent || 'Clock';
+                div.innerHTML = `
+      <span class="layer-icon">${icons[elem.type] || '?'}</span>
+      <span class="layer-name" title="${elem.key}">${name}</span>
+      <span class="layer-delete" onclick="event.stopPropagation();elements=elements.filter(e=>e.id!=='${elem.id}');if(selectedId==='${elem.id}')selectedId=null;renderCanvas();renderLayers();showProps();updateStatus()">✕</span>
+    `;
+                div.addEventListener('click', () => selectElement(elem.id));
+                list.appendChild(div);
+            });
+        }
+
+        // ── Properties Panel ──
+        function showProps() {
+            const elem = getSelected();
+            document.getElementById('emptyProps').style.display = elem ? 'none' : '';
+            document.getElementById('propsContent').style.display = elem ? '' : 'none';
+            if (!elem) return;
+
+            document.getElementById('propKey').value = elem.key || '';
+            document.getElementById('propType').textContent = elem.type.toUpperCase();
+            document.getElementById('propX').value = elem.x;
+            document.getElementById('propY').value = elem.y;
+            document.getElementById('propW').value = elem.w;
+            document.getElementById('propH').value = elem.h;
+            document.getElementById('propFontSize').value = elem.fontSize;
+            document.getElementById('propFontWeight').value = elem.fontWeight;
+            document.getElementById('propColor').value = elem.color;
+            document.getElementById('propColorHex').value = elem.color;
+            document.getElementById('propAlign').value = elem.alignment;
+
+            // Show/hide type-specific sections
+            document.getElementById('textProps').style.display = elem.type === 'icon' ? 'none' : '';
+            document.getElementById('clockProps').style.display = elem.type === 'clock' ? '' : 'none';
+            document.getElementById('entityProps').style.display = elem.type === 'entity' ? '' : 'none';
+            document.getElementById('textContentProps').style.display = elem.type === 'text' ? '' : 'none';
+            document.getElementById('iconProps').style.display = elem.type === 'icon' ? '' : 'none';
+
+            if (elem.type === 'clock') {
+                document.getElementById('propClockFormat').value = elem.clockFormat || '12h';
+                document.getElementById('propShowSeconds').value = String(elem.showSeconds || false);
+                document.getElementById('propClockContent').value = elem.clockContent || 'time';
+            }
+            if (elem.type === 'entity') {
+                document.getElementById('propEntityId').value = elem.entityId || '';
+                document.getElementById('propEntityDisplay').value = elem.entityDisplay || 'state';
+                document.getElementById('propEntityIndex').value = elem.entityIndex || 1;
+            }
+            if (elem.type === 'text') {
+                document.getElementById('propTextContent').value = elem.textContent || '';
+            }
+            if (elem.type === 'icon') {
+                document.getElementById('propIconName').value = elem.iconName || '';
+                document.getElementById('propIconColor').value = elem.iconColor || '#FFFFFF';
+                document.getElementById('propIconColorHex').value = elem.iconColor || '#FFFFFF';
+            }
+        }
+
+        // Bind property inputs
+        function bindProp(inputId, setter) {
+            const el = document.getElementById(inputId);
+            if (!el) return;
+            el.addEventListener('input', () => {
+                const elem = getSelected();
+                if (!elem) return;
+                setter(elem, el.value);
+                renderCanvas();
+                renderLayers();
+            });
+        }
+
+        bindProp('propKey', (e, v) => e.key = v);
+        bindProp('propX', (e, v) => e.x = parseInt(v) || 0);
+        bindProp('propY', (e, v) => e.y = parseInt(v) || 0);
+        bindProp('propW', (e, v) => e.w = parseInt(v) || 10);
+        bindProp('propH', (e, v) => e.h = parseInt(v) || 8);
+        bindProp('propFontSize', (e, v) => e.fontSize = parseInt(v) || 12);
+        bindProp('propFontWeight', (e, v) => e.fontWeight = parseInt(v) || 400);
+        bindProp('propColor', (e, v) => { e.color = v; document.getElementById('propColorHex').value = v; });
+        bindProp('propColorHex', (e, v) => { if (/^#[0-9a-fA-F]{6}$/.test(v)) { e.color = v; document.getElementById('propColor').value = v; } });
+        bindProp('propAlign', (e, v) => e.alignment = v);
+        bindProp('propClockFormat', (e, v) => e.clockFormat = v);
+        bindProp('propShowSeconds', (e, v) => e.showSeconds = v);
+        bindProp('propClockContent', (e, v) => e.clockContent = v);
+        bindProp('propEntityId', (e, v) => { e.entityId = v; fetchSingleEntity(v); });
+        bindProp('propEntityDisplay', (e, v) => e.entityDisplay = v);
+        bindProp('propEntityIndex', (e, v) => e.entityIndex = parseInt(v) || 1);
+        bindProp('propTextContent', (e, v) => e.textContent = v);
+        bindProp('propIconName', (e, v) => e.iconName = v);
+        bindProp('propIconColor', (e, v) => { e.iconColor = v; document.getElementById('propIconColorHex').value = v; });
+        bindProp('propIconColorHex', (e, v) => { if (/^#[0-9a-fA-F]{6}$/.test(v)) { e.iconColor = v; document.getElementById('propIconColor').value = v; } });
+
+        // ── Grid Toggle ──
+        function toggleGrid() {
+            gridOn = !gridOn;
+            document.getElementById('canvasGrid').style.display = gridOn ? '' : 'none';
+            document.getElementById('gridBtn').textContent = 'Grid: ' + (gridOn ? 'On' : 'Off');
+        }
+
+        // ── HA Connection ──
+        function openHAModal() {
+            document.getElementById('haModal').classList.add('open');
+            // Load saved
+            document.getElementById('haUrl').value = localStorage.getItem('ld_haUrl') || '';
+            document.getElementById('haToken').value = localStorage.getItem('ld_haToken') || '';
+        }
+
+        function closeHAModal() {
+            document.getElementById('haModal').classList.remove('open');
+        }
+
+        async function connectHA() {
+            const url = normalizeUrl(document.getElementById('haUrl').value);
+            const token = document.getElementById('haToken').value;
+            const refresh = parseInt(document.getElementById('haRefresh').value);
+
+            localStorage.setItem('ld_haUrl', url);
+            localStorage.setItem('ld_haToken', token);
+
+            if (!url || !token) { alert('Please enter HA URL and token'); return; }
+
+            try {
+                const resp = await fetch(url + '/api/states', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const states = await resp.json();
+                haStates = {};
+                states.forEach(s => { haStates[s.entity_id] = s; });
+                haConnected = true;
+                document.getElementById('haDot').classList.add('connected');
+                document.getElementById('haStatus').textContent = 'HA: Connected (' + states.length + ' entities)';
+
+                // Setup refresh
+                if (haRefreshTimer) clearInterval(haRefreshTimer);
+                if (refresh > 0) {
+                    haRefreshTimer = setInterval(() => refreshHA(), refresh);
+                }
+
+                closeHAModal();
+                renderCanvas();
+            } catch (err) {
+                let msg = err.message || String(err);
+                const isMixedContent = window.location.protocol === 'https:' && url.startsWith('http:');
+
+                if (isMixedContent) {
+                    msg += '\n\nSECURITY ERROR: Mixed Content\n'
+                        + 'You are using the designer on HTTPS (GitHub Pages) but HA is on HTTP.\n'
+                        + 'Browsers block this for security.\n\n'
+                        + 'SOLUTION: You must run this designer locally via HTTP.\n'
+                        + '1. Install "Live Server" extension in VS Code\n'
+                        + '2. Right-click layout-designer.html -> "Open with Live Server"';
+                } else if (msg.includes('Failed to fetch')) {
+                    msg += '\n\nThis is a CORS issue. To fix it:\n'
+                        + '1. Add this to your HA configuration.yaml:\n'
+                        + '   http:\n'
+                        + '     cors_allowed_origins:\n'
+                        + `       - "${window.location.origin}"\n\n`
+                        + '2. Restart Home Assistant.\n'
+                        + '3. Ensure you are NOT opening this file as file:// (use a local server).';
+                }
+                alert('Failed to connect: ' + msg);
+                haConnected = false;
+                document.getElementById('haDot').classList.remove('connected');
+                document.getElementById('haStatus').textContent = 'HA: Connection failed';
+            }
+        }
+
+        async function refreshHA() {
+            const url = normalizeUrl(localStorage.getItem('ld_haUrl'));
+            const token = localStorage.getItem('ld_haToken');
+            if (!url || !token) return;
+            try {
+                const resp = await fetch(url + '/api/states', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!resp.ok) return;
+                const states = await resp.json();
+                haStates = {};
+                states.forEach(s => { haStates[s.entity_id] = s; });
+                renderCanvas();
+            } catch { }
+        }
+
+        async function fetchSingleEntity(entityId) {
+            const url = normalizeUrl(localStorage.getItem('ld_haUrl'));
+            const token = localStorage.getItem('ld_haToken');
+            if (!url || !token || !entityId) return;
+            try {
+                const resp = await fetch(url + '/api/states/' + entityId, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!resp.ok) return;
+                const state = await resp.json();
+                haStates[entityId] = state;
+                renderCanvas();
+            } catch { }
+        }
+
+        // ── Export Layout Config ──
+        function exportLayout() {
+            const config = buildLayoutConfig();
+            const json = JSON.stringify(config, null, 2);
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(json).then(() => {
+                const statusEl = document.getElementById('haStatus');
+                const old = statusEl.textContent;
+                statusEl.textContent = '✅ Layout copied to clipboard! Paste in Stream Deck PI.';
+                setTimeout(() => { statusEl.textContent = old; }, 3000);
+            }).catch(() => { });
+
+            // Also download as file
+            const blob = new Blob([json], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'layout-config.json';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function buildLayoutConfig() {
+            return {
+                elements: elements.map(elem => {
+                    const el = {
+                        type: mapExportType(elem),
+                        x: elem.x, y: elem.y, w: elem.w, h: elem.h,
+                    };
+                    // Typography (for non-icon types)
+                    if (elem.type !== 'icon') {
+                        el.fontSize = elem.fontSize || 12;
+                        el.fontWeight = parseInt(elem.fontWeight) || 400;
+                        el.color = elem.color || '#FFFFFF';
+                        el.alignment = elem.alignment || 'center';
+                    }
+                    // Clock props
+                    if (elem.type === 'clock') {
+                        el.clockFormat = elem.clockFormat || '12h';
+                        el.clockContent = elem.clockContent || 'time';
+                        if (elem.showSeconds === true || elem.showSeconds === 'true') el.showSeconds = true;
+                    }
+                    // Entity props
+                    if (elem.type === 'entity') {
+                        el.entityIndex = parseInt(elem.entityIndex) || 1;
+                    }
+                    // Text props
+                    if (elem.type === 'text') {
+                        el.textContent = elem.textContent || '';
+                    }
+                    return el;
+                })
+            };
+        }
+
+        function mapExportType(elem) {
+            if (elem.type === 'entity') {
+                const d = elem.entityDisplay || 'state';
+                if (d === 'icon') return 'entity-icon';
+                if (d === 'name') return 'entity-name';
+                return 'entity-state';
+            }
+            return elem.type; // clock, text
+        }
+
+        // ── Import Layout Config ──
+        function importLayout() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    elements = [];
+                    nextId = 1;
+
+                    // Support both formats: LayoutConfig {elements:[]} and legacy layout JSON {items:[]}
+                    const items = data.elements || data.items || [];
+                    if (!Array.isArray(items) || items.length === 0) {
+                        alert('No elements found in the file.');
+                        return;
+                    }
+
+                    items.forEach(item => {
+                        const id = 'elem-' + (nextId++);
+                        // LayoutConfig format
+                        if (item.type && !item.rect) {
+                            const elem = {
+                                id,
+                                type: importType(item.type),
+                                key: id,
+                                x: item.x || 0, y: item.y || 0,
+                                w: item.w || 50, h: item.h || 20,
+                                fontSize: item.fontSize || 12,
+                                fontWeight: item.fontWeight || 400,
+                                color: item.color || '#FFFFFF',
+                                alignment: item.alignment || 'center',
+                                textContent: item.textContent || '',
+                                clockFormat: item.clockFormat || '12h',
+                                showSeconds: item.showSeconds || false,
+                                clockContent: item.clockContent || 'time',
+                                entityId: '', entityDisplay: importEntityDisplay(item.type),
+                                entityIndex: item.entityIndex || 1,
+                                iconName: '', iconColor: '#FFFFFF',
+                            };
+                            elements.push(elem);
+                        }
+                        // Legacy layout JSON format
+                        else if (item.rect) {
+                            const rect = item.rect;
+                            const elem = {
+                                id,
+                                type: 'text',
+                                key: item.key || id,
+                                x: rect[0], y: rect[1], w: rect[2], h: rect[3],
+                                fontSize: item.font?.size || 12,
+                                fontWeight: item.font?.weight || 400,
+                                color: item.color || '#FFFFFF',
+                                alignment: item.alignment || 'center',
+                                textContent: '',
+                                clockFormat: '12h', showSeconds: false, clockContent: 'time',
+                                entityId: '', entityDisplay: 'state', entityIndex: 1,
+                                iconName: '', iconColor: '#FFFFFF',
+                            };
+                            if (item.key?.includes('time') || item.key?.includes('clock')) elem.type = 'clock';
+                            else if (item.key?.includes('icon')) elem.type = 'icon';
+                            else if (item.key?.includes('entity')) elem.type = 'entity';
+                            elements.push(elem);
+                        }
+                    });
+                    selectedId = null;
+                    renderCanvas();
+                    renderLayers();
+                    showProps();
+                    updateStatus();
+                } catch (err) {
+                    alert('Failed to parse JSON: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function importType(t) {
+            if (t === 'entity-state' || t === 'entity-icon' || t === 'entity-name') return 'entity';
+            return t;
+        }
+
+        function importEntityDisplay(t) {
+            if (t === 'entity-icon') return 'icon';
+            if (t === 'entity-name') return 'name';
+            return 'state';
+        }
+
+        // ── Status ──
+        function updateStatus() {
+            document.getElementById('elemCount').textContent = 'Elements: ' + elements.length;
+        }
+
+        // ── Clock Refresh ──
+        clockTimer = setInterval(() => {
+            const hasClocks = elements.some(e => e.type === 'clock');
+            if (hasClocks) renderCanvas();
+        }, 1000);
+
+        // ── Auto-connect HA on load ──
+        window.addEventListener('load', () => {
+            const url = localStorage.getItem('ld_haUrl');
+            const token = localStorage.getItem('ld_haToken');
+            if (url && token) {
+                document.getElementById('haUrl').value = url;
+                document.getElementById('haToken').value = token;
+                connectHA();
+            }
+            renderCanvas();
+            renderLayers();
+            updateStatus();
+        });
+    </script>
+</body>
+
+</html>
